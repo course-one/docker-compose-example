@@ -1,0 +1,43 @@
+# Compose file version
+version: "3.9"
+
+# services
+services: 
+  # frontend (php-apache web server)
+  frontend:
+    image: php:8.0.0-apache-buster
+    volumes:
+      - "./www:/var/www/html"
+    ports: 
+      - "8080:80"
+    depends_on: 
+      - backend
+      - cache
+    networks:
+      - web_app
+  
+  # backend (express HTTP server)
+  backend:
+    build: ./backend
+    restart: "always"
+    environment:
+      - "SERVER_PORT=80"
+    init: true
+    depends_on:
+      - cache
+    networks:
+      - web_app
+
+  # cache (redis cache server)
+  cache:
+    image: redis:6.0.9-alpine
+    networks:
+      web_app:
+        aliases:
+          - "redis-server"
+
+# networks
+networks:
+  web_app:
+    name: "web_app_network"
+    driver: bridge
